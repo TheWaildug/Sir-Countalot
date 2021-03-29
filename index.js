@@ -5,6 +5,7 @@ const fs = require("fs")
 const EmbedColor = require("./embedmongo")
 const ms = require("ms")
 const DevMongo = require("./devlist")
+const express = require("express")
 const CountingSetting = require("./countingsettings")
 const ServerBlacklist = require("./serverbl")
 
@@ -135,6 +136,7 @@ client.on("message", async message => {
     if(message.guild.id != "791760625243652127" && message.guild.id != "806897037777174570" && message.member.id != "432345618028036097"){
         return;
     }
+    
     const data = await prefixModel.findOne({
         guildID: message.guild.id
     })
@@ -147,7 +149,9 @@ client.on("message", async message => {
         let preee = new prefixModel({guildID: message.guild.id, prefix: `c!`})
     preee.save()
     }
-    
+    if(message.mentions.members.has("791760755195904020")){
+        return message.channel.send(`Your current prefix is \`${prefix}\`.`)
+    }
     if(!message.content.startsWith(prefix)) return;
     const serverbl = await ServerBlacklist.findOne({guildID: message.guild.id})
     if(serverbl != null){
@@ -243,6 +247,44 @@ client.on("message", async message => {
           })
         }
         message.channel.send("https://www.youtube.com/watch?v=9dfMCVa-4Es")
+    }else if(command == "sblacklist"){
+        if(message.guild.id != "791760625243652127"){
+            return message.reply(`This command can only be used in Frog Development Studios.`);
+        }
+        let dev = await isdev(message.member.id)
+       console.log(dev)
+       if(dev == false){
+           return message.delete();
+       }
+        let guild
+       guild = await client.guilds.fetch(args[0]).catch(error => {
+           console.log(`ok ${error}`)
+       })
+        
+
+        if(!guild || guild.size > 1){
+           return message.channel.send(`This is not a guild!`)
+        }
+       
+       
+        if(guild.id == "791760625243652127" || guild.id == "806897037777174570"){
+            return message.reply(`This is a whitelisted guild!`)
+        }
+        const isblacklisted = await ServerBlacklist.findOne({guildID: guild.id})
+        console.log(isblacklisted)
+        if(isblacklisted == null){
+            console.log(`Guild is not blacklisted. Blacklisting...`)
+            let blacklist = new ServerBlacklist({guildID: guild.id})
+            console.log(blacklist)
+            blacklist.save()
+            
+            message.channel.send(`I have blacklisted \`${guild.name}\` from using my commands with the id \`${blacklist.id}\`.`)
+            return;
+        }else if(isblacklisted != null){
+            console.log(`Guild is blacklisted. Removing...`)
+            await ServerBlacklist.deleteMany({guildID: guild.id})
+            return message.channel.send(`I have unblacklisted \`${guild.id}\` from using my commands.`)
+        }
     }else if(command == "blacklist"){
         if(message.guild.id != "791760625243652127"){
             return message.reply(`This command can only be used in Frog Development Studios.`);
@@ -374,3 +416,7 @@ client.on("message", async message => {
     }
 })
 client.login(process.env.token)
+const server = express()
+server.listen("/", () => {
+    console.log(`Server is ready!`)
+})
