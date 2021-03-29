@@ -417,6 +417,6 @@ client.on("message", async message => {
 })
 client.login(process.env.token)
 const server = express()
-server.listen("/", () => {
-    console.log(`Server is ready!`)
+server.all('/', (req, res)=>{
+    res.send('ansh is meanie')
 })
