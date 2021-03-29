@@ -5,15 +5,18 @@ const fs = require("fs")
 const EmbedColor = require("./embedmongo")
 const ms = require("ms")
 const DevMongo = require("./devlist")
+const CountingSetting = require("./countingsettings")
 const ServerBlacklist = require("./serverbl")
-const CountingFile = require("./counting.json")
+
 const CountingEnabled = require("./countingenabled")
 const mongoose = require("mongoose")
 const CommandBlacklist = require("./commandbl")
+const { count } = require("./prefix.js")
 require("dotenv").config()
 mongoose.connect(process.env.mongourl,{
     useNewUrlParser: true,
     useUnifiedTopology: true,
+    useFindAndModify: false 
 });
 client.Commands = new Discord.Collection();
 
@@ -24,7 +27,7 @@ for (const file of commandFiles) {
 	client.Commands.set(command.name, command);
 }
 client.on("guildCreate", async guild => {
-    if(guild.id != "791760625243652127"){
+  
         let channels = guild.channels.cache.filter(channel => channel.type == "text")
         let channel = channels.first()
     
@@ -32,7 +35,7 @@ client.on("guildCreate", async guild => {
         channel.send(`Thanks for inviting Sir Countalot! I am undergoing a rennovation so I will not respond in this server. If you want to get updated with my development, please follow this channel in my support server. https://discord.gg/wkegcJeenz`).catch(error => {
             console.log(`Guild-${guild.id} Error ${error}`)
         })
-    }   
+ 
 })
 client.on("ready", async () => {
     console.log("Sir Countalot is ready!")
@@ -49,7 +52,7 @@ client.on("ready", async () => {
         return true
     }
 }
-client.on("error", () => { client.login(process.env.token) });
+client.on("error", (error) => { console.log(error); client.login(process.env.token) });
 let roles = ["792942766979022858","792102531408986142","793940805207326820"]
 async function isbypass(user){
     let con = false
@@ -72,7 +75,7 @@ client.on("message",async message => {
     if(message.channel.type == "dm"){
         return;
     }
-    if(message.guild.id != "791760625243652127"){
+    if(message.guild.id != "791760625243652127" && message.member.id != "432345618028036097"){
         return;
     }
     let countingenabled = CountingEnabled.findOne({guildID: message.guild.id})
@@ -83,13 +86,53 @@ client.on("message",async message => {
     if(serverbl != null){
         return console.log(`This guild is blacklisted. SMH`)
     }
-    console.log("test")
+    const countingon = await CountingEnabled.findOne({guildID: message.guild.id})
+   
+    if(countingon == null || countingon.enabled == false){
+        return;
+    }
+    const countingsettings = await CountingSetting.findOne({guildID: message.guild.id})
+    if(countingsettings == null || countingsettings.channel == null){
+        return;
+    }
+    let countingchannel = message.guild.channels.cache.get(countingsettings.channel)
+    console.log(countingchannel.name)
+    if(message.channel != countingchannel){
+        return;
+    }
+    let countingFile = fs.readFileSync("counting.json")
+    let countingObject = JSON.parse(countingFile)
+    if(countingObject.hasOwnProperty(message.guild.id)){
+        let guildObject = countingObject[message.guild.id]
+        let curnum = guildObject["currentnumber"]
+        let lastuser = guildObject["lastcounter"]
+        console.log(curnum)
+        console.log(lastuser)
+        let guildlast = await message.guild.members.fetch(lastuser)
+        if(message.content != curnum){
+            if(countingsettings.reset == true){
+                countingObject[message.guild.id]
+                ["currentnumber"] = 1;
+                countingObject[message.guild.id]
+                ["lastcounter"] = message.member.id;
+                await fs.writeFileSync("counting.json", JSON.stringify(countingObject))
+            }
+        }else if(message.content == curnum){
+            console.log(`${message.member.id} counted correctly`)
+            countingObject[message.guild.id]
+                ["currentnumber"] = Number(curnum) + 1;
+                countingObject[message.guild.id]
+                ["lastcounter"] = message.member.id;
+                await fs.writeFileSync("counting.json", JSON.stringify(countingObject))
+   
+        }
+    }
 })
 client.on("message", async message => {   
     if(message.author.bot) return;
 
     if(message.channel.type == "dm") return;
-    if(message.guild.id != "791760625243652127" && message.member.id != "432345618028036097"){
+    if(message.guild.id != "791760625243652127" && message.guild.id != "806897037777174570" && message.member.id != "432345618028036097"){
         return;
     }
     const data = await prefixModel.findOne({
@@ -135,6 +178,10 @@ client.on("message", async message => {
         client.Commands.get("counting").execute(message,args)
     }else if(command == "ping"){    
         client.Commands.get('ping').execute(message,args,client)
+    }else if(command == "dothefunny"){
+        client.Commands.get("dothefunny").execute(message,args)
+    }else if(command == "serverinfo"){
+        client.Commands.get("serverinfo").execute(message,args,client)
     }else if(command == "eval"){
        let dev = await isdev(message.member.id)
        console.log(dev)
@@ -177,9 +224,19 @@ client.on("message", async message => {
       }
   
           
+    }else if(command == "trello"){
+        let perms = message.guild.me.permissionsIn(message.channel).toArray()
+        
+        if(!perms.includes("EMBED_LINKS")){
+          return message.channel.send(`I cannot send links in this channel. Please make sure I have the \`EMBED_LINKS\` permission.`).catch(error => {
+            console.log(`Guild ${message.guild.id} Error ${error}`)
+          })
+        }
+        message.channel.send("Here is the Trello for SirCountalot. Any suggestions will show up here. https://trello.com/b/BhHm03dC/sir-countalot-development")
+        
     }else if(command == "rickrollme"){
         let perms = message.guild.me.permissionsIn(message.channel).toArray()
-  
+        
         if(!perms.includes("EMBED_LINKS")){
           return message.channel.send(`I cannot send links in this channel. Please make sure I have the \`EMBED_LINKS\` permission.`).catch(error => {
             console.log(`Guild ${message.guild.id} Error ${error}`)
@@ -187,6 +244,9 @@ client.on("message", async message => {
         }
         message.channel.send("https://www.youtube.com/watch?v=9dfMCVa-4Es")
     }else if(command == "blacklist"){
+        if(message.guild.id != "791760625243652127"){
+            return message.reply(`This command can only be used in Frog Development Studios.`);
+        }
         let dev = await isdev(message.member.id)
        console.log(dev)
        if(dev == false){
