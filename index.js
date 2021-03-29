@@ -27,7 +27,7 @@ for (const file of commandFiles) {
 	client.Commands.set(command.name, command);
 }
 client.on("guildCreate", async guild => {
-  
+  console.log(`New guild ${guild.id}, ${guild.name}`)
         let channels = guild.channels.cache.filter(channel => channel.type == "text")
         let channel = channels.first()
     
