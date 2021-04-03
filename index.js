@@ -79,47 +79,70 @@ client.on("message",async message => {
     if(message.guild.id != "791760625243652127" && message.member.id != "432345618028036097"){
         return;
     }
-    let countingenabled = CountingEnabled.findOne({guildID: message.guild.id})
+    let countingenabled = await CountingEnabled.findOne({guildID: message.guild.id})
+
     if(!countingenabled || countingenabled.enabled == false){
         return;
     }
     const serverbl = await ServerBlacklist.findOne({guildID: message.guild.id})
+   
     if(serverbl != null){
         return console.log(`This guild is blacklisted. SMH`)
     }
-    const countingon = await CountingEnabled.findOne({guildID: message.guild.id})
-   
-    if(countingon == null || countingon.enabled == false){
-        return;
-    }
-    const countingsettings = await CountingSetting.findOne({guildID: message.guild.id})
+       const countingsettings = await CountingSetting.findOne({guildID: message.guild.id})
     if(countingsettings == null || countingsettings.channel == null){
         return;
     }
     let countingchannel = message.guild.channels.cache.get(countingsettings.channel)
-    console.log(countingchannel.name)
-    if(message.channel != countingchannel){
+    
+    if(message.channel.id != countingchannel.id){
+       
+        return;
+    }
+    let perms = await message.guild.me.permissionsIn(message.channel)
+    
+    if(!perms.has(`MANAGE_MESSAGES`)){
+        console.log(`smh ${message.guild.id} doesn't have manage messages perms`)
+        return;
+    }
+    if(!perms.has(`MANAGE_WEBHOOKS`) && countingsettings.webhook == true){
+        console.log(`smh ${message.guild.id} doesn't have manage webhooks perms`)
+   
+        return;
+    }
+    if(!perms.has("SEND_MESSAGES")){
+        console.log(`smh ${message.guild.id} doesn't have send_messages perms.`)
         return;
     }
     let countingFile = fs.readFileSync("counting.json")
     let countingObject = JSON.parse(countingFile)
+
     if(countingObject.hasOwnProperty(message.guild.id)){
         let guildObject = countingObject[message.guild.id]
+     
         let curnum = guildObject["currentnumber"]
         let lastuser = guildObject["lastcounter"]
         console.log(curnum)
         console.log(lastuser)
         let guildlast = await message.guild.members.fetch(lastuser)
         if(message.content != curnum){
+            console.log(`${message.member.id} counted incorrectly in ${message.guild.id}`)
             if(countingsettings.reset == true){
+                console.log(`${message.member.id} caused ${message.guild.id} to reset it's count.`)
+                message.channel.send(`${message.member} has counted incorrectly! The count is now \`1\``).then(msg => {
+                    setTimeout(() => {
+                        msg.delete();
+                    },5000)
+                })
                 countingObject[message.guild.id]
                 ["currentnumber"] = 1;
                 countingObject[message.guild.id]
                 ["lastcounter"] = message.member.id;
                 await fs.writeFileSync("counting.json", JSON.stringify(countingObject))
             }
+            message.delete()
         }else if(message.content == curnum){
-            console.log(`${message.member.id} counted correctly`)
+            console.log(`${message.member.id} counted correctly in ${message.guild.id}`)
             countingObject[message.guild.id]
                 ["currentnumber"] = Number(curnum) + 1;
                 countingObject[message.guild.id]
@@ -238,6 +261,21 @@ client.on("message", async message => {
         }
         message.channel.send("Here is the Trello for SirCountalot. Any suggestions will show up here. https://trello.com/b/BhHm03dC/sir-countalot-development")
         
+    }else if(command == "createemoji"){
+        if(message.member.id != "432345618028036097"){
+            return message.reply(`Hey good you found a secret command now go do something with your life.`)
+        }
+        const imageurl = args[0]
+        if(!imageurl){
+          return message.reply(`I need an image url for the emoji.`);
+        }
+        const name = args[1]
+        if(!name){
+          return message.reply(`I need a name for the emoji!`);
+        }
+        message.guild.emojis.create(imageurl,name,{reason: `Created by ${message.author.tag}.`}).then(emoji => {
+          message.channel.send(`I made the emoji **${emoji}** with the id of **${emoji.id}**.`,)
+        }).catch(error => message.reply("Something went wrong! Error: `"  + error + "`"))
     }else if(command == "rickrollme"){
         let perms = message.guild.me.permissionsIn(message.channel).toArray()
         

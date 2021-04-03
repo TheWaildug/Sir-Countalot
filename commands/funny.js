@@ -15,13 +15,14 @@ module.exports = {
             return message.reply(`I need an amount of emojis stupid.`);
         }
         for(let i = 0; i < number; i++){
-            message.guild.emojis.create("https://cdn.discordapp.com/attachments/792505220679598080/825175152739745802/shut.png","shut",{reason: "Created by stupid froggo"}).then(emoji => {
-                console.log(emoji)
-            })
-        
-               setTimeout(() => {
-                
+            setTimeout(() => {
+                message.guild.emojis.create("https://cdn.discordapp.com/attachments/792505220679598080/825175152739745802/shut.png","shut",{reason: "Created by stupid froggo"}).then(emoji => {
+                    console.log(emoji)
+                })
             },5000)
+            
+        
+               
         }
         return message.reply(`I created ${number} emojis.`)
     }

@@ -5,4 +5,4 @@ const config = new mongoose.Schema({
   enabled: Boolean,  
 })
 
- const MessageModel = module.exports = mongoose.model("coutningenable",config)
+ const MessageModel = module.exports = mongoose.model("countingenable",config)
