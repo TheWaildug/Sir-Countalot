@@ -44,6 +44,7 @@ client.on("ready", async () => {
         client.user.setPresence({ activity: { name: "people count.", type: `WATCHING` }, status: 'dnd' })
 
 })
+
  async function isdev(id){
     const dev = await DevMongo.findOne({memberID: id})
 
@@ -69,6 +70,49 @@ async function isbypass(user){
     return false;
 }
 ///Counting
+async function Count(countingObject,message,countingsettings){
+    let guildObject = countingObject[message.guild.id]
+     
+    let curnum = guildObject["currentnumber"]
+    let lastuser = guildObject["lastcounter"]
+    if(curnum == null){
+        curnum = 1
+    }
+    if(lastuser == null){
+        lastuser = 791760755195904020
+    }
+    console.log(curnum)
+    console.log(lastuser)
+    let guildlast = await message.guild.members.fetch(lastuser).catch(e => {
+        console.log(`Invalid User ${e}`)
+    })
+    if(message.content != curnum){
+        console.log(`${message.member.id} counted incorrectly in ${message.guild.id}`)
+        if(countingsettings.reset == true){
+            console.log(`${message.member.id} caused ${message.guild.id} to reset it's count.`)
+            message.channel.send(`${message.member} has counted incorrectly! The count is now \`1\``).then(msg => {
+                setTimeout(() => {
+                    msg.delete();
+                },5000)
+            })
+            countingObject[message.guild.id]
+            ["currentnumber"] = 1;
+            countingObject[message.guild.id]
+            ["lastcounter"] = message.member.id;
+            await fs.writeFileSync("counting.json", JSON.stringify(countingObject))
+        }
+        message.delete()
+    }else if(message.content == curnum){
+        console.log(`${message.member.id} counted correctly in ${message.guild.id}`)
+        countingObject[message.guild.id]
+        ["currentnumber"] = Number(curnum) + 1;
+        countingObject[message.guild.id]
+        ["lastcounter"] = message.member.id;
+           
+            await fs.writeFileSync("counting.json", JSON.stringify(countingObject))
+
+    }
+}
 client.on("message",async message => {
     if(message.author.bot){
         return;
@@ -84,7 +128,7 @@ client.on("message",async message => {
     if(!countingenabled || countingenabled.enabled == false){
         return;
     }
-    const serverbl = await ServerBlacklist.findOne({guildID: message.guild.id})
+    const serverbl = await ServerBlacklist.findOne({guildID: message.guild.id, blacklisted: true})
    
     if(serverbl != null){
         return console.log(`This guild is blacklisted. SMH`)
@@ -116,41 +160,16 @@ client.on("message",async message => {
     }
     let countingFile = fs.readFileSync("counting.json")
     let countingObject = JSON.parse(countingFile)
+if(!countingObject.hasOwnProperty(message.guild.id)){
+    countingObject[message.guild.id] = {}
+    let guildObject = {}
+    guildObject.currentnumber = "1"
+    guildObject.lastcounter = "791760755195904020"
+    countingObject[message.guild.id] = guildObject
 
-    if(countingObject.hasOwnProperty(message.guild.id)){
-        let guildObject = countingObject[message.guild.id]
-     
-        let curnum = guildObject["currentnumber"]
-        let lastuser = guildObject["lastcounter"]
-        console.log(curnum)
-        console.log(lastuser)
-        let guildlast = await message.guild.members.fetch(lastuser)
-        if(message.content != curnum){
-            console.log(`${message.member.id} counted incorrectly in ${message.guild.id}`)
-            if(countingsettings.reset == true){
-                console.log(`${message.member.id} caused ${message.guild.id} to reset it's count.`)
-                message.channel.send(`${message.member} has counted incorrectly! The count is now \`1\``).then(msg => {
-                    setTimeout(() => {
-                        msg.delete();
-                    },5000)
-                })
-                countingObject[message.guild.id]
-                ["currentnumber"] = 1;
-                countingObject[message.guild.id]
-                ["lastcounter"] = message.member.id;
-                await fs.writeFileSync("counting.json", JSON.stringify(countingObject))
-            }
-            message.delete()
-        }else if(message.content == curnum){
-            console.log(`${message.member.id} counted correctly in ${message.guild.id}`)
-            countingObject[message.guild.id]
-                ["currentnumber"] = Number(curnum) + 1;
-                countingObject[message.guild.id]
-                ["lastcounter"] = message.member.id;
-                await fs.writeFileSync("counting.json", JSON.stringify(countingObject))
-   
-        }
-    }
+        await fs.writeFileSync(`counting.json`, JSON.stringify(countingObject))
+}
+    Count(countingObject,message,countingsettings)
 })
 client.on("message", async message => {   
     if(message.author.bot) return;
@@ -180,7 +199,7 @@ client.on("message", async message => {
     if(serverbl != null){
         return console.log(`This guild is blacklisted. SMH`)
     }
-    const commandbl = await CommandBlacklist.findOne({memberID: message.member.id})
+    const commandbl = await CommandBlacklist.findOne({memberID: message.member.id,blacklisted: true})
         
         if(commandbl != null){
             return console.log(`${message.member.id} is blacklisted. SMH`);
@@ -286,14 +305,18 @@ client.on("message", async message => {
         }
         message.channel.send("https://www.youtube.com/watch?v=9dfMCVa-4Es")
     }else if(command == "sblacklist"){
+        let blacklistman = await DevMongo.findOne({memberID: message.member.id})
+        console.log(blacklistman)
+        if(blacklistman == null){
+            return message.delete();
+        }
+        if(blacklistman.rank != "Blacklist Manager" && blacklistman.rank != "Head Dev"){
+            return message.delete();
+        }
         if(message.guild.id != "791760625243652127"){
             return message.reply(`This command can only be used in Frog Development Studios.`);
         }
-        let dev = await isdev(message.member.id)
-       console.log(dev)
-       if(dev == false){
-           return message.delete();
-       }
+        
         let guild
        guild = await client.guilds.fetch(args[0]).catch(error => {
            console.log(`ok ${error}`)
@@ -324,14 +347,18 @@ client.on("message", async message => {
             return message.channel.send(`I have unblacklisted \`${guild.id}\` from using my commands.`)
         }
     }else if(command == "blacklist"){
+        let blacklistman = await DevMongo.findOne({memberID: message.member.id})
+        console.log(blacklistman)
+        if(blacklistman == null){
+            return message.delete();
+        }
+        if(blacklistman.rank != "Blacklist Manager" && blacklistman.rank != "Head Dev"){
+            return message.delete();
+        }
         if(message.guild.id != "791760625243652127"){
             return message.reply(`This command can only be used in Frog Development Studios.`);
         }
-        let dev = await isdev(message.member.id)
-       console.log(dev)
-       if(dev == false){
-           return message.delete();
-       }
+        
         let mentionmember
        
         if(message.mentions.members.first()){
@@ -361,19 +388,61 @@ client.on("message", async message => {
         const isblacklisted = await CommandBlacklist.findOne({memberID: mentionmember.id})
         console.log(isblacklisted)
         if(isblacklisted == null){
-            console.log(`User is not blacklisted. Blacklisting...`)
-            let blacklist = new CommandBlacklist({memberID: mentionmember.id})
-            console.log(blacklist)
-            blacklist.save()
-            mentionmember.send(`You have been blacklisted from using my commands. If you think this is a mistake, please appeal in my support server. https://discord.gg/AsQQf374`).catch(error => {
+           let reason = message.content.split(" ").splice(2).join(" ")
+           console.log(reason)
+            
+              if(!reason){
+                  return message.reply(`I need a reason for this user.`)
+              }
+              let blacklist = new CommandBlacklist({memberID: mentionmember.id, reason: reason, blacklisted: true})
+              blacklist.save()
+            mentionmember.send(`You have been blacklisted from using my commands with the reason **${reason}** If you think this is a mistake, please appeal via this link: https://discord.gg/qyHnGP5yMP`).catch(error => {
                 console.log(`Cannot DM user.`)
             })
             message.channel.send(`I have blacklisted ${mentionmember} from using my commands with the id \`${blacklist.id}\`.`)
             return;
-        }else if(isblacklisted != null){
+            
+            
+            
+        }else if(isblacklisted.blacklisted == false){
+            let reason = message.content.split(" ").splice(2).join(" ")
+if(!reason){
+    return message.reply(`I need a reason for this user.`)
+}
+            console.log(`User is not blacklisted. Blacklisting...`)
+            const query = { "memberID": mentionmember.id };
+              const update = {
+                "$set": {
+                  "reason": reason,
+                  "blacklisted": true
+                }
+              };
+              const options = { returnNewDocument: true };
+              let newset = await CommandBlacklist.findOneAndUpdate(query, update, options)
+              console.log(newset)
+              mentionmember.send(`You have been blacklisted from using my commands with the reason **${reason}** If you think this is a mistake, please appeal via this link: https://discord.gg/qyHnGP5yMP`).catch(error => {
+                console.log(`Cannot DM user.`)
+            })
+            message.channel.send(`I have blacklisted ${mentionmember} from using my commands with the id \`${newset.id}\`.`)
+            return;
+        }else if(isblacklisted.blacklisted == true){
+let reason = message.content.split(" ").splice(2).join(" ")
+if(!reason){
+    return message.reply(`I need a reason for this user.`)
+}
             console.log(`User is blacklisted. Removing...`)
-            await CommandBlacklist.deleteMany({memberID: mentionmember.id})
-            return message.channel.send(`I have unblacklisted ${mentionmember} from using my commands.`)
+            const query = { "memberID": mentionmember.id };
+              const update = {
+                "$set": {
+                  "reason": reason,
+                  "blacklisted": false
+                }
+              };
+              const options = { returnNewDocument: true };
+              let newset = await CommandBlacklist.findOneAndUpdate(query, update, options)
+              console.log(newset)
+              mentionmember.send(`You have been unblacklisted from using my commands with the reason **${reason}**`)
+            return message.channel.send(`I have unblacklisted ${mentionmember} from using my commands with the id \`${newset.id}\``)
         }
     }else if(command == "botinfo"){
         client.Commands.get("botinfo").execute(message,args,client)
@@ -400,12 +469,7 @@ client.on("message", async message => {
             return message.reply(`You cannot give a bot developer idiot.`)
         }
         let rank = null
-        if(!args[0].startsWith("<@")){
-            if(isNaN(args[0])){
-                args[1] = args[0]
-            }
-         
-        }
+        
         console.log(args[1])
         if(args[1] == "1"){
             rank = "Developer"
@@ -413,10 +477,12 @@ client.on("message", async message => {
             rank = "Head Dev"
         }else if(args[1] == "0"){
             rank = "None"
+        }else if(args[1] == "3"){
+            rank = "Blacklist Manager"
         }
         if(rank == null){
-            message.reply(`0 - Reset, 1 - Developer, 2 - Head Dev`)
-            const filter = m => m.author.id == message.author.id && [m.content.toLowerCase() == "0" || m.content.toLowerCase() == "1" || m.content.toLowerCase() == "2"]
+            message.reply(`0 - Reset, 1 - Developer, 2 - Head Dev, 3 - Blacklist Manager`)
+            const filter = m => m.author.id == message.author.id && [m.content.toLowerCase() == "3" || m.content.toLowerCase() == "0" || m.content.toLowerCase() == "1" || m.content.toLowerCase() == "2"]
             const collector = message.channel.createMessageCollector(filter,{time: 20000});
       collector.on("end", (collected,reason) => {
         console.log(reason)
@@ -431,16 +497,19 @@ client.on("message", async message => {
                 rank = "Developer"
             }else if(m.content.toLowerCase() == "2"){
                 rank = "Head Dev"
+            }else if(m.content.toLowerCase() == "3"){
+                rank = "Blacklist Manager"
             }
       })
     }
         console.log(rank)
+    
         if(rank == "None"){
             await DevMongo.deleteMany({memberID: mentionmember.id})
             message.reply(`I have attempted to reset this user's rank.`)
             return;
         }else if(rank != "None"){
-            DevMongo.deleteMany({memberID: mentionmember.id})
+           await DevMongo.deleteMany({memberID: mentionmember.id})
             const rankmongo = new DevMongo({memberID: mentionmember.id, rank: rank})
             rankmongo.save()
             message.reply(`I have attempted to give ${mentionmember} the rank ${rank}. Check the database under the id \`${rankmongo.id}\``)

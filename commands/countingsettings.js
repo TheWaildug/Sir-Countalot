@@ -12,7 +12,7 @@ module.exports = {
             return message.delete();
         }
         let embedcolor = await EmbedColor.findOne({guildID: message.guild.id})
-    
+    console.log(embedcolor)
         if(embedcolor == null){
           let embedcolor = new EmbedColor({guildID: message.guild.id, color: `RANDOM`})
           embedcolor.save()
@@ -121,6 +121,11 @@ module.exports = {
               collector2.stop(`Answered to cancel`)
               message.channel.send(`Cancelled`)
             }else if(m.mentions.channels.first()){
+              let ishere = await CountingSettings.findOne({guildID: message.guild.id})
+              if(ishere == null){
+                ishere = new CountingSettings({guildID: message.guild.id})
+               await ishere.save()
+              }
               collector2.stop(`Tagged a channel`)
               const query = { "guildID": message.guild.id };
               const update = {
@@ -129,8 +134,8 @@ module.exports = {
                 }
               };
               const options = { returnNewDocument: true };
-              let newset = await CountingSettings.findOneAndUpdate(query, update, options)
-              console.log(newset)
+               ishere = await CountingSettings.findOneAndUpdate(query, update, options)
+              console.log(ishere)
               
               message.channel.send(`I have changed the counting channel to ${m.mentions.channels.first()}`)
             }
