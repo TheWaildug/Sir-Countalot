@@ -1,6 +1,7 @@
 const Discord = require("discord.js")
 const EmbedColor = require("../embedmongo")
 const ms = require("ms")
+const jsonfile = require("../package.json")
 module.exports = {
     name: "botinfo",
     description: "Shows information about Sir Countalot",
@@ -29,7 +30,7 @@ module.exports = {
     const embed = new Discord.MessageEmbed()
     
     .setAuthor(`Information about ${client.user.username}.`,client.user.displayAvatarURL())
-    .setDescription(`**Bot** - ${client.user.tag} - ${client.user.id}\n**Created with** ${emoji}\n**Node JS Version** - ${process.version}\n**Time since last start** - ${ms(client.uptime,{long: true})}`)
+    .setDescription(`**Bot** - ${client.user.tag} - ${client.user.id}\n**Created with** ${emoji}\n**Sir Countalot Version** - ${jsonfile.version}\n**Node JS Version** - ${process.version}\n**Time since last start** - ${ms(client.uptime,{long: true})}`)
 .setColor(embedcolor.color)
 message.channel.send(embed)
 return;
