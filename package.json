@@ -1,7 +1,7 @@
 {
   "name": "sir-countalot",
   "version": "1.0.0",
-  "description": "",
+  "description": "A counting bot that has a customizable prefix and command settings. ",
   "main": "index.js",
   "dependencies": {
     "discord.js": "^12.5.1",
