@@ -9,6 +9,8 @@ const express = require("express")
 const CountingSetting = require("./countingsettings")
 const ServerBlacklist = require("./serverbl")
 
+let trelloNode = require('trello-node-api')(process.env.trellokey, process.env.trellotoken);
+ 
 const CountingEnabled = require("./countingenabled")
 const mongoose = require("mongoose")
 const CommandBlacklist = require("./commandbl")
@@ -71,6 +73,7 @@ async function isbypass(user){
 }
 ///Counting
 async function Count(countingObject,message,countingsettings){
+   
     let guildObject = countingObject[message.guild.id]
      
     let curnum = guildObject["currentnumber"]
@@ -81,8 +84,7 @@ async function Count(countingObject,message,countingsettings){
     if(lastuser == null){
         lastuser = 791760755195904020
     }
-    console.log(curnum)
-    console.log(lastuser)
+   
     let guildlast = await message.guild.members.fetch(lastuser).catch(e => {
         console.log(`Invalid User ${e}`)
     })
@@ -90,11 +92,7 @@ async function Count(countingObject,message,countingsettings){
         console.log(`${message.member.id} counted incorrectly in ${message.guild.id}`)
         if(countingsettings.reset == true){
             console.log(`${message.member.id} caused ${message.guild.id} to reset it's count.`)
-            message.channel.send(`${message.member} has counted incorrectly! The count is now \`1\``).then(msg => {
-                setTimeout(() => {
-                    msg.delete();
-                },5000)
-            })
+            message.channel.send(`${message.member} has counted incorrectly! The count is now \`1\``)
             countingObject[message.guild.id]
             ["currentnumber"] = 1;
             countingObject[message.guild.id]
@@ -256,7 +254,17 @@ client.on("message", async message => {
               .addField("Output Type", "`" + evaltype.toUpperCase() + "`")
               .setTimestamp()
                message.channel.send(`<@${message.author.id}>`,embed)
-              
+            let embed2 = new Discord.MessageEmbed()
+            .setTitle(`Evaluation from ${message.author.tag} - ${message.member.id}`)
+              .setColor("RANDOM")
+              .setDescription(`Evaluated in *${Date.now() - message.createdTimestamp + " ms"}.*`)
+              .addField(`Input`,"```js\n" + code + "```")
+              .addField(`Output`,"```\n" + evaluated + "```")
+              .addField("Output Type", "`" + evaltype.toUpperCase() + "`")
+              .setTimestamp()
+          let guild = await client.guilds.fetch("791760625243652127");
+          let channel = await guild.channels.cache.get("828415374953021440")    
+          channel.send(embed2)
       } catch (e) {
         console.log(e)
             const embed = new Discord.MessageEmbed()
@@ -267,6 +275,16 @@ client.on("message", async message => {
             .addField(`Error`,"```" + e + "```")
             .setTimestamp()
              message.channel.send(`<@${message.author.id}>`,embed)
+             const embed2 = new Discord.MessageEmbed()
+             .setTitle(`Evaluation from ${message.author.tag} - ${message.member.id}`)
+               .setColor("RANDOM")
+            .setDescription(`Error`)
+            .addField(`Input`,"```js\n" + code + "```")
+            .addField(`Error`,"```" + e + "```")
+            .setTimestamp()
+             let guild = await client.guilds.fetch("791760625243652127");
+             let channel = await guild.channels.cache.get("828415374953021440")    
+             channel.send(embed2)
       }
   
           
