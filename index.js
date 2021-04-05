@@ -8,7 +8,7 @@ const DevMongo = require("./devlist")
 const express = require("express")
 const CountingSetting = require("./countingsettings")
 const ServerBlacklist = require("./serverbl")
-
+const fetch = require('node-fetch');
 let trelloNode = require('trello-node-api')(process.env.trellokey, process.env.trellotoken);
  
 const CountingEnabled = require("./countingenabled")
