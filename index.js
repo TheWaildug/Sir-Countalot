@@ -118,7 +118,7 @@ client.on("message",async message => {
     if(message.channel.type == "dm"){
         return;
     }
-    if(message.guild.id != "791760625243652127" && message.member.id != "432345618028036097"){
+    if(message.guild.id != "791760625243652127" && message.guild.id != "791760625243652127" && message.member.id != "432345618028036097"){
         return;
     }
     let countingenabled = await CountingEnabled.findOne({guildID: message.guild.id})
@@ -182,14 +182,25 @@ client.on("message", async message => {
     })
    
     let prefix
-    if(data){
-        prefix = data.prefix
-    }else if(!data){
-        prefix = "c!"
-        let preee = new prefixModel({guildID: message.guild.id, prefix: `c!`})
-    preee.save()
+    if(client.user.id != "809088738033401866"){
+        if(data){
+            prefix = data.prefix
+        }else if(!data){
+            prefix = "c!"
+            let preee = new prefixModel({guildID: message.guild.id, prefix: `c!`})
+        preee.save()
+        }
+    }else{
+        if(data){
+            prefix = data.prefix
+        }else if(!data){
+            prefix = "c+"
+            let preee = new prefixModel({guildID: message.guild.id, prefix: `c+`})
+        preee.save()
+        }
     }
-    if(message.mentions.members.has("791760755195904020")){
+   
+    if(message.mentions.members.has("791760755195904020") && client.user.id == "791760755195904020"){
         return message.channel.send(`Your current prefix is \`${prefix}\`.`)
     }
     if(!message.content.startsWith(prefix)) return;

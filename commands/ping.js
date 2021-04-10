@@ -19,9 +19,10 @@ module.exports = {
         let embedcolor = await EmbedColor.findOne({guildID: message.guild.id})
         
         if(embedcolor == null){
-          let embedcolor = new EmbedColor({guildID: message.guild.id, color: `RANDOM`})
+          embedcolor = new EmbedColor({guildID: message.guild.id, color: `RANDOM`})
           embedcolor.save()
         }
+        console.log(embedcolor)
         const embed = new Discord.MessageEmbed()
         .setTitle(`Pong!`)
         .setDescription(`Message Ping: ${yourping}\nAPI Ping: ${botping}`)

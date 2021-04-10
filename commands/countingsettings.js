@@ -103,7 +103,16 @@ module.exports = {
      
         let curnum = guildObject["currentnumber"]
         return message.channel.send(`The next number is \`${curnum}\`.`)
-    }
+    }else if(!countingObject.hasOwnProperty(message.guild.id)){
+      countingObject[message.guild.id] = {}
+      let guildObject = {}
+      guildObject.currentnumber = "1"
+      guildObject.lastcounter = "791760755195904020"
+      countingObject[message.guild.id] = guildObject
+  
+          await fs.writeFileSync(`counting.json`, JSON.stringify(countingObject))
+          return message.channel.send(`The next number is \`${curnum}\``)
+  }
               }else if(m.content.toLowerCase() == "channel"){
                 collector.stop(`Answered to channel.`)
                 const filter2 = m => m.author.id == message.member.id && [m.mentions.channels.first() || m.content.toLowerCase() == "cancel"]
