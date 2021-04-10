@@ -8,7 +8,7 @@ module.exports = {
     description: `Settings for counting.`,
     permissions: `MANAGE_SERVER`,
     async execute(message,args){
-        if(!message.member.permissions.has("MANAGE_SERVER")){
+        if(!message.member.permissions.has("MANAGE_GUILD")){
             return message.delete();
         }
         let embedcolor = await EmbedColor.findOne({guildID: message.guild.id})
