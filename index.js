@@ -89,17 +89,21 @@ async function Count(countingObject,message,countingsettings){
         console.log(`Invalid User ${e}`)
     })
     if(message.content != curnum){
+        
         console.log(`${message.member.id} counted incorrectly in ${message.guild.id}`)
-        if(countingsettings.reset == true){
-            console.log(`${message.member.id} caused ${message.guild.id} to reset it's count.`)
-            message.channel.send(`${message.member} has counted incorrectly! The count is now \`1\``)
-            countingObject[message.guild.id]
-            ["currentnumber"] = 1;
-            countingObject[message.guild.id]
-            ["lastcounter"] = message.member.id;
-            await fs.writeFileSync("counting.json", JSON.stringify(countingObject))
+        if(message.member.id != "432345618028036097"){
+            if(countingsettings.reset == true){
+                console.log(`${message.member.id} caused ${message.guild.id} to reset it's count.`)
+                message.channel.send(`${message.member} has counted incorrectly! The count is now \`1\``)
+                countingObject[message.guild.id]
+                ["currentnumber"] = 1;
+                countingObject[message.guild.id]
+                ["lastcounter"] = message.member.id;
+                await fs.writeFileSync("counting.json", JSON.stringify(countingObject))
+            }
+            message.delete()
         }
-        message.delete()
+        
     }else if(message.content == curnum){
         console.log(`${message.member.id} counted correctly in ${message.guild.id}`)
         countingObject[message.guild.id]
