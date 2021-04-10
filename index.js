@@ -49,7 +49,7 @@ client.on("ready", async () => {
 
  async function isdev(id){
     const dev = await DevMongo.findOne({memberID: id})
-
+console.log(dev)
     if(dev == null){
         return false
     }else if(dev != null){
