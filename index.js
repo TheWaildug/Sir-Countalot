@@ -523,31 +523,56 @@ if(!reason){
           return message.channel.send(`Timed out after 20 seconds.`)
         }
     }) 
-        collector.on("collect", m => {
+        collector.on("collect",async  m => {
             if(m.content.toLowerCase() == "0"){
                 rank = "None"
+               
+                    await DevMongo.deleteMany({memberID: mentionmember.id})
+                    message.reply(`I have attempted to reset this user's rank.`)
+                    return;
+               
             }else if(m.content.toLowerCase() == "1"){
                 rank = "Developer"
+               
+                   await DevMongo.deleteMany({memberID: mentionmember.id})
+                    const rankmongo = new DevMongo({memberID: mentionmember.id, rank: rank})
+                    rankmongo.save()
+                    message.reply(`I have attempted to give ${mentionmember} the rank ${rank}. Check the database under the id \`${rankmongo.id}\``)
+                    return;
+                
             }else if(m.content.toLowerCase() == "2"){
                 rank = "Head Dev"
+                await DevMongo.deleteMany({memberID: mentionmember.id})
+                const rankmongo = new DevMongo({memberID: mentionmember.id, rank: rank})
+                rankmongo.save()
+                message.reply(`I have attempted to give ${mentionmember} the rank ${rank}. Check the database under the id \`${rankmongo.id}\``)
+                return;
+            
             }else if(m.content.toLowerCase() == "3"){
                 rank = "Blacklist Manager"
+                await DevMongo.deleteMany({memberID: mentionmember.id})
+                const rankmongo = new DevMongo({memberID: mentionmember.id, rank: rank})
+                rankmongo.save()
+                message.reply(`I have attempted to give ${mentionmember} the rank ${rank}. Check the database under the id \`${rankmongo.id}\``)
+                return;
+            
             }
       })
-    }
-        console.log(rank)
-    
+    }else if(rank != null){
         if(rank == "None"){
             await DevMongo.deleteMany({memberID: mentionmember.id})
-            message.reply(`I have attempted to reset this user's rank.`)
-            return;
+                    message.reply(`I have attempted to reset this user's rank.`)
+                    return;
         }else if(rank != "None"){
-           await DevMongo.deleteMany({memberID: mentionmember.id})
-            const rankmongo = new DevMongo({memberID: mentionmember.id, rank: rank})
-            rankmongo.save()
-            message.reply(`I have attempted to give ${mentionmember} the rank ${rank}. Check the database under the id \`${rankmongo.id}\``)
-            return;
-        }
+            await DevMongo.deleteMany({memberID: mentionmember.id})
+                const rankmongo = new DevMongo({memberID: mentionmember.id, rank: rank})
+                rankmongo.save()
+                message.reply(`I have attempted to give ${mentionmember} the rank ${rank}. Check the database under the id \`${rankmongo.id}\``)
+                return;
+        }   }
+        console.log(rank)
+    
+        
       
           }else if(command == "invite"){
         client.Commands.get("invite").execute(message,args)
