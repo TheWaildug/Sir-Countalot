@@ -118,7 +118,7 @@ client.on("message",async message => {
     if(message.channel.type == "dm"){
         return;
     }
-    if(message.guild.id != "791760625243652127" && message.guild.id != "791760625243652127" && message.member.id != "432345618028036097"){
+    if(message.guild.id != "791760625243652127" && message.guild.id != "813837609473933312" && message.member.id != "432345618028036097"){
         return;
     }
     let countingenabled = await CountingEnabled.findOne({guildID: message.guild.id})
