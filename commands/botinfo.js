@@ -19,11 +19,11 @@ module.exports = {
               })
         }
         let embedcolor = await EmbedColor.findOne({guildID: message.guild.id})
-        
-        if(embedcolor == null){
-          let embedcolor = new EmbedColor({guildID: message.guild.id, color: `RANDOM`})
-          embedcolor.save()
-        }
+      
+      if(embedcolor == null){
+         embedcolor = new EmbedColor({guildID: message.guild.id, color: `RANDOM`})
+        embedcolor.save()
+      }
         console.log(`bot info`)
         let platform = process.platform;
     if(platform == "linux"){

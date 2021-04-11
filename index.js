@@ -32,6 +32,7 @@ for (const file of commandFiles) {
 client.on("guildCreate", async guild => {
   console.log(`New guild ${guild.id}, ${guild.name}`)
         let channels = guild.channels.cache.filter(channel => channel.type == "text")
+        channels = channels.filter(channel => guild.me.permissionsIn(channel).has("SEND_MESSAGES"))
         let channel = channels.first()
     
         console.log(channel)
@@ -42,9 +43,14 @@ client.on("guildCreate", async guild => {
 })
 client.on("ready", async () => {
     console.log("Sir Countalot is ready!")
+if(client.user.id == "809088738033401866"){
+    client.user.setPresence({ activity: { name: "new features.", type: `WATCHING` }, status: 'dnd' })
 
-        client.user.setPresence({ activity: { name: "people count.", type: `WATCHING` }, status: 'dnd' })
+}else{
+    client.user.setPresence({ activity: { name: "people count.", type: `WATCHING` }, status: 'dnd' })
 
+}
+       
 })
 
  async function isdev(id){
@@ -303,6 +309,8 @@ client.on("message", async message => {
       }
   
           
+    }else if(command == "suggest"){
+        client.Commands.get("suggest").execute(message,args)
     }else if(command == "trello"){
         let perms = message.guild.me.permissionsIn(message.channel).toArray()
         

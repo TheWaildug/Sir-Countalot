@@ -17,11 +17,11 @@ module.exports = {
         let yourping = Date.now() - message.createdTimestamp
         let botping = Math.round(client.ws.ping)
         let embedcolor = await EmbedColor.findOne({guildID: message.guild.id})
-        
-        if(embedcolor == null){
-          embedcolor = new EmbedColor({guildID: message.guild.id, color: `RANDOM`})
-          embedcolor.save()
-        }
+      
+      if(embedcolor == null){
+         embedcolor = new EmbedColor({guildID: message.guild.id, color: `RANDOM`})
+        embedcolor.save()
+      }
         console.log(embedcolor)
         const embed = new Discord.MessageEmbed()
         .setTitle(`Pong!`)

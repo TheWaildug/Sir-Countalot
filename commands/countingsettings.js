@@ -12,11 +12,11 @@ module.exports = {
             return message.delete();
         }
         let embedcolor = await EmbedColor.findOne({guildID: message.guild.id})
-    console.log(embedcolor)
-        if(embedcolor == null){
-          let embedcolor = new EmbedColor({guildID: message.guild.id, color: `RANDOM`})
-          embedcolor.save()
-        }
+      
+      if(embedcolor == null){
+         embedcolor = new EmbedColor({guildID: message.guild.id, color: `RANDOM`})
+        embedcolor.save()
+      }
         let perms = message.guild.me.permissionsIn(message.channel).toArray()
         if(!perms.includes("EMBED_LINKS")){
           return message.channel.send(`I cannot send embeds in this channel. Please make sure I have the \`EMBED_LINKS\` permission.`).catch(error => {

@@ -31,11 +31,11 @@ module.exports = {
       })
     }
     let embedcolor = await EmbedColor.findOne({guildID: message.guild.id})
-        
-    if(embedcolor == null){
-      let embedcolor = new EmbedColor({guildID: message.guild.id, color: `RANDOM`})
-      embedcolor.save()
-    }
+      
+      if(embedcolor == null){
+         embedcolor = new EmbedColor({guildID: message.guild.id, color: `RANDOM`})
+        embedcolor.save()
+      }
     let embed = new Discord.MessageEmbed()
       .setTitle(mentionmember.tag + "'s Profile Picture")
     .setColor(embedcolor.color)

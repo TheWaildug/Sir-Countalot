@@ -6,9 +6,9 @@ module.exports = {
     permissions: "None.",
     async execute(message,args,commandclient,prefix){
       let embedcolor = await EmbedColor.findOne({guildID: message.guild.id})
-        
+      
       if(embedcolor == null){
-        let embedcolor = new EmbedColor({guildID: message.guild.id, color: `RANDOM`})
+         embedcolor = new EmbedColor({guildID: message.guild.id, color: `RANDOM`})
         embedcolor.save()
       }
         let perms = message.guild.me.permissionsIn(message.channel).toArray()
