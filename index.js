@@ -10,7 +10,7 @@ const express = require("express")
 const CountingSetting = require("./countingsettings")
 const ServerBlacklist = require("./serverbl")
 const fetch = require('node-fetch');
-
+let trello = require('trello-node-api')(process.env.trellokey, process.env.trellotoken);
 const CountingEnabled = require("./countingenabled")
 const mongoose = require("mongoose")
 const CommandBlacklist = require("./commandbl")
@@ -84,16 +84,27 @@ async function Count(countingObject,message,countingsettings){
      
     let curnum = guildObject["currentnumber"]
     let lastuser = guildObject["lastcounter"]
+    let cooldown = guildObject["cooldown"]
+    console.log(cooldown)
+    if(cooldown == null){
+        cooldown = Date.now()
+    }else{
+        if(Date.now() < cooldown){
+            return message.channel.send(`Slow down! You're counting waaaay to fast. You can count from \`${curnum}\` in \`${ms(cooldown - Date.now(),{long: true})}\``)
+        }
+    }
     if(curnum == null){
         curnum = 1
     }
     if(lastuser == null){
         lastuser = 791760755195904020
     }
-   
+  
     let guildlast = await message.guild.members.fetch(lastuser).catch(e => {
         console.log(`Invalid User ${e}`)
     })
+    console.log(curnum)
+    console.log(lastuser)
     if(message.content != curnum){
         
         console.log(`${message.member.id} counted incorrectly in ${message.guild.id}`)
@@ -103,6 +114,8 @@ async function Count(countingObject,message,countingsettings){
                 message.channel.send(`${message.member} has counted incorrectly! The count is now \`1\``)
                 countingObject[message.guild.id]
                 ["currentnumber"] = 1;
+                countingObject[message.guild.id]
+                ["cooldown"] = Date.now() + ms("1.5 seconds");
                 countingObject[message.guild.id]
                 ["lastcounter"] = message.member.id;
                 await fs.writeFileSync("counting.json", JSON.stringify(countingObject))
@@ -114,6 +127,8 @@ async function Count(countingObject,message,countingsettings){
         console.log(`${message.member.id} counted correctly in ${message.guild.id}`)
         countingObject[message.guild.id]
         ["currentnumber"] = Number(curnum) + 1;
+        countingObject[message.guild.id]
+        ["cooldown"] = Date.now() + ms("1.5 seconds");
         countingObject[message.guild.id]
         ["lastcounter"] = message.member.id;
            
@@ -130,6 +145,11 @@ client.on("message",async message => {
     }
     if(message.guild.id != "791760625243652127" && message.guild.id != "813837609473933312" && message.member.id != "432345618028036097"){
         return;
+    }
+    if(client.user.id == "809088738033401866"){
+        if(message.guild.id != "791760625243652127" && message.member.id != "432345618028036097"){
+            return;
+        }
     }
     let countingenabled = await CountingEnabled.findOne({guildID: message.guild.id})
 
@@ -186,7 +206,11 @@ client.on("message", async message => {
     if(message.guild.id != "791760625243652127" && message.guild.id != "813837609473933312" && message.member.id != "432345618028036097"){
         return;
     }
-    
+    if(client.user.id == "809088738033401866"){
+        if(message.guild.id != "791760625243652127" && message.member.id != "432345618028036097"){
+            return;
+        }
+    }
     const data = await prefixModel.findOne({
         guildID: message.guild.id
     })
@@ -229,6 +253,23 @@ client.on("message", async message => {
      client.Commands.get("prefix").execute(message,args)
     }else if(command == "avatar"){
         client.Commands.get("avatar").execute(message,args,client)
+    }else if(command == "slowmode"){
+        if(message.member.id != "432345618028036097"){
+            return message.delete();
+        }
+        let sm 
+        if(args[0].includes("+")){
+            sm = message.channel.rateLimitPerUser + Number(args[0].replace("+",""));
+        }else if(args[0].includes("-")){
+            sm = message.channel.rateLimitPerUser  - Number(args[0].replace("-",""));
+        }else{
+            sm = args[0]
+        }
+        console.log(sm)
+if(isNaN(sm)){
+    return message.channel.send(`dum dum this isn't a number.`)
+}
+message.channel.setRateLimitPerUser(sm).then(() => {return message.channel.send(`Changed slowmode to \`${sm}\` seconds.`)}).catch(e => {return message.channel.send(`dude something went wrong: \`${e}\``)})
     }else if(command == "lock"){
         if(message.guild.id != "791760625243652127"){
             return;
@@ -310,7 +351,7 @@ client.on("message", async message => {
   
           
     }else if(command == "suggest"){
-        client.Commands.get("suggest").execute(message,args)
+        client.Commands.get("suggest").execute(message,args,trello)
     }else if(command == "trello"){
         let perms = message.guild.me.permissionsIn(message.channel).toArray()
         
