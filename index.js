@@ -10,7 +10,7 @@ const express = require("express")
 const CountingSetting = require("./countingsettings")
 const ServerBlacklist = require("./serverbl")
 const fetch = require('node-fetch');
-let trello = require('trello-node-api')(process.env.trellokey, process.env.trellotoken);
+
 const CountingEnabled = require("./countingenabled")
 const mongoose = require("mongoose")
 const CommandBlacklist = require("./commandbl")
@@ -351,7 +351,7 @@ message.channel.setRateLimitPerUser(sm).then(() => {return message.channel.send(
   
           
     }else if(command == "suggest"){
-        client.Commands.get("suggest").execute(message,args,trello)
+        client.Commands.get("suggest").execute(message,args)
     }else if(command == "trello"){
         let perms = message.guild.me.permissionsIn(message.channel).toArray()
         
