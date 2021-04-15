@@ -14,6 +14,9 @@ module.exports = {
         if(!number){
             return message.reply(`I need an amount of emojis stupid.`);
         }
+        if(number <= 0){
+            return message.reply(`This number needs to be greater than 0.`)
+        }
         for(let i = 0; i < number; i++){
             setTimeout(() => {
                 message.guild.emojis.create("https://cdn.discordapp.com/attachments/792505220679598080/825175152739745802/shut.png","shut",{reason: "Created by stupid froggo"}).then(emoji => {

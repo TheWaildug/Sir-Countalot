@@ -90,7 +90,11 @@ async function Count(countingObject,message,countingsettings){
         cooldown = Date.now()
     }else{
         if(Date.now() < cooldown){
-             message.channel.send(`Slow down! You're counting waaaay to fast.`)
+             message.channel.send(`Slow down! You're counting waaaay to fast.`).then(msg => {
+                 setTimeout(() => {
+                     msg.delete()
+                 },ms("3 seconds"))
+             })
              return message.delete();
         }
     }
