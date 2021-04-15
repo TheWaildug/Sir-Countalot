@@ -84,20 +84,7 @@ async function Count(countingObject,message,countingsettings){
      
     let curnum = guildObject["currentnumber"]
     let lastuser = guildObject["lastcounter"]
-    let cooldown = guildObject["cooldown"]
-    console.log(cooldown)
-    if(cooldown == null){
-        cooldown = Date.now()
-    }else{
-        if(Date.now() < cooldown){
-             message.channel.send(`Slow down! You're counting waaaay to fast.`).then(msg => {
-                 setTimeout(() => {
-                     msg.delete()
-                 },ms("3 seconds"))
-             })
-             return message.delete();
-        }
-    }
+   
     if(curnum == null){
         curnum = 1
     }
@@ -119,8 +106,7 @@ async function Count(countingObject,message,countingsettings){
                 message.channel.send(`${message.member} has counted incorrectly! The count is now \`1\``)
                 countingObject[message.guild.id]
                 ["currentnumber"] = 1;
-                countingObject[message.guild.id]
-                ["cooldown"] = Date.now() + ms(".5 seconds");
+            
                 countingObject[message.guild.id]
                 ["lastcounter"] = message.member.id;
                 await fs.writeFileSync("counting.json", JSON.stringify(countingObject))
@@ -132,8 +118,7 @@ async function Count(countingObject,message,countingsettings){
         console.log(`${message.member.id} counted correctly in ${message.guild.id}`)
         countingObject[message.guild.id]
         ["currentnumber"] = Number(curnum) + 1;
-        countingObject[message.guild.id]
-        ["cooldown"] = Date.now() + ms(".5 seconds");
+        
         countingObject[message.guild.id]
         ["lastcounter"] = message.member.id;
            
