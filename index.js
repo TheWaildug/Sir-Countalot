@@ -204,6 +204,7 @@ client.on("message", async message => {
     if(message.author.bot) return;
 
     if(message.channel.type == "dm") return;
+   
     if(message.guild.id != "791760625243652127" && message.guild.id != "813837609473933312" && message.member.id != "432345618028036097"){
         return;
     }
