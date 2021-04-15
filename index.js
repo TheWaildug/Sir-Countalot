@@ -90,7 +90,8 @@ async function Count(countingObject,message,countingsettings){
         cooldown = Date.now()
     }else{
         if(Date.now() < cooldown){
-            return message.channel.send(`Slow down! You're counting waaaay to fast. You can count from \`${curnum}\` in \`${ms(cooldown - Date.now(),{long: true})}\``)
+             message.channel.send(`Slow down! You're counting waaaay to fast.`)
+             return message.delete();
         }
     }
     if(curnum == null){
@@ -115,7 +116,7 @@ async function Count(countingObject,message,countingsettings){
                 countingObject[message.guild.id]
                 ["currentnumber"] = 1;
                 countingObject[message.guild.id]
-                ["cooldown"] = Date.now() + ms("1.5 seconds");
+                ["cooldown"] = Date.now() + ms(".5 seconds");
                 countingObject[message.guild.id]
                 ["lastcounter"] = message.member.id;
                 await fs.writeFileSync("counting.json", JSON.stringify(countingObject))
@@ -128,7 +129,7 @@ async function Count(countingObject,message,countingsettings){
         countingObject[message.guild.id]
         ["currentnumber"] = Number(curnum) + 1;
         countingObject[message.guild.id]
-        ["cooldown"] = Date.now() + ms("1.5 seconds");
+        ["cooldown"] = Date.now() + ms(".5 seconds");
         countingObject[message.guild.id]
         ["lastcounter"] = message.member.id;
            
