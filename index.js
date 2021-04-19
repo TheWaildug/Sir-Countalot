@@ -117,7 +117,7 @@ async function Count(countingObject,message,countingsettings){
     }else if(message.content == curnum){
         console.log(`${message.member.id} counted correctly in ${message.guild.id}`)
         countingObject[message.guild.id]
-        ["currentnumber"] = Number(curnum) + 1;
+        ["currentnumber"] = String(Number(curnum) + 1);
         
         countingObject[message.guild.id]
         ["lastcounter"] = message.member.id;
