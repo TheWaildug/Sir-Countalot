@@ -1,6 +1,6 @@
 const Discord = require("discord.js")
-const client = new Discord.Client({intents: ["GUILDS", "GUILD_MEMBERS", "GUILD_MESSAGES"]})
-const prefixModel = require('./prefix.js')
+const client = new Discord.Client({ ws: { properties: { $browser: "Discord iOS" }}, intents: ["GUILDS", "GUILD_MEMBERS", "GUILD_MESSAGES"]});
+
 const fs = require("fs")
 const EmbedColor = require("./embedmongo")
 const ms = require("ms")
@@ -14,7 +14,8 @@ const fetch = require('node-fetch');
 const CountingEnabled = require("./countingenabled")
 const mongoose = require("mongoose")
 const CommandBlacklist = require("./commandbl")
-const { count } = require("./prefix.js")
+const prefixModel = require("./prefix.js")
+const counting = require("./counting.js")
 require("dotenv").config()
 mongoose.connect(process.env.mongourl,{
     useNewUrlParser: true,
@@ -44,10 +45,10 @@ client.on("guildCreate", async guild => {
 client.on("ready", async () => {
     console.log("Sir Countalot is ready!")
 if(client.user.id == "809088738033401866"){
-    client.user.setPresence({ activity: { name: "new features.", type: `WATCHING` }, status: 'dnd' })
+    client.user.setPresence({ activity: { name: "new features.", type: `WATCHING` }, status: 'online' })
 
 }else{
-    client.user.setPresence({ activity: { name: "people count.", type: `WATCHING` }, status: 'dnd' })
+    client.user.setPresence({ activity: { name: "people count.", type: `WATCHING` }, status: 'online' })
 
 }
        
@@ -78,18 +79,21 @@ async function isbypass(user){
     return false;
 }
 ///Counting
-async function Count(countingObject,message,countingsettings){
+async function Count(message,countingsettings){
    
-    let guildObject = countingObject[message.guild.id]
-     
-    let curnum = guildObject["currentnumber"]
-    let lastuser = guildObject["lastcounter"]
+    let countingObject = await counting.findOne({guild: message.guild.id})
+    if(countingObject == null || countingObject.currentnumber == null || countingObject.lastuser == null){
+     countingObject = new counting({guild: message.guild.id, lastuser: "791760755195904020", currentnumber: "1"})
+     await countingObject.save()
+    }
+    let curnum = countingObject.currentnumber
+    let lastuser = countingObject.lastuser
    
     if(curnum == null){
         curnum = 1
     }
     if(lastuser == null){
-        lastuser = 791760755195904020
+        lastuser = "791760755195904020"
     }
   
     let guildlast = await message.guild.members.fetch(lastuser).catch(e => {
@@ -104,25 +108,22 @@ async function Count(countingObject,message,countingsettings){
             if(countingsettings.reset == true){
                 console.log(`${message.member.id} caused ${message.guild.id} to reset it's count.`)
                 message.channel.send(`${message.member} has counted incorrectly! The count is now \`1\``)
-                countingObject[message.guild.id]
-                ["currentnumber"] = 1;
-            
-                countingObject[message.guild.id]
-                ["lastcounter"] = message.member.id;
-                await fs.writeFileSync("counting.json", JSON.stringify(countingObject))
+                await counting.deleteMany({guild: message.guild.id})
+                countingObject = new counting({guild: message.guild.id, lastuser: message.member.id, currentnumber: "1"})
+                await countingObject.save().then(() => {message.delete().then(() => {console.log(`deleted`)})})
+            }else{
+                message.delete().then(() => {console.log(`deleted`)})
             }
-            message.delete()
+           
         }
         
     }else if(message.content == curnum){
         console.log(`${message.member.id} counted correctly in ${message.guild.id}`)
-        countingObject[message.guild.id]
-        ["currentnumber"] = String(Number(curnum) + 1);
-        
-        countingObject[message.guild.id]
-        ["lastcounter"] = message.member.id;
-           
-            await fs.writeFileSync("counting.json", JSON.stringify(countingObject))
+        await counting.deleteMany({guild: message.guild.id})
+        console.log(Number(curnum) + 1)
+        countingObject = new counting({guild: message.guild.id, lastuser: message.member.id, currentnumber: String(Number(curnum) + 1)})
+       
+        await countingObject.save()
 
     }
 }
@@ -176,18 +177,9 @@ client.on("message",async message => {
         console.log(`smh ${message.guild.id} doesn't have send_messages perms.`)
         return;
     }
-    let countingFile = fs.readFileSync("counting.json")
-    let countingObject = JSON.parse(countingFile)
-if(!countingObject.hasOwnProperty(message.guild.id)){
-    countingObject[message.guild.id] = {}
-    let guildObject = {}
-    guildObject.currentnumber = "1"
-    guildObject.lastcounter = "791760755195904020"
-    countingObject[message.guild.id] = guildObject
+    
 
-        await fs.writeFileSync(`counting.json`, JSON.stringify(countingObject))
-}
-    Count(countingObject,message,countingsettings)
+    Count(message,countingsettings)
 })
 client.on("message", async message => {   
     if(message.author.bot) return;

@@ -2,6 +2,7 @@ const Discord = require("discord.js")
 const EmbedColor = require("../embedmongo.js")
 const CountingEnabled = require("../countingenabled.js");
 const fs = require("fs")
+let counting = require("../counting")
 const CountingSettings = require("../countingsettings.js")
 module.exports = {
     name: `counting`,
@@ -25,7 +26,7 @@ module.exports = {
         }
         const embed = new Discord.MessageEmbed()
         .setTitle(`Counting Settings`)
-        .setDescription(`On - Turn on Counting.\nOff - Turn off counting.\nNew Number - Change the next counting number.\nCurrent Number - Show the next counting number.\nChannel - Change channel in which counting takes place.\nRuin - Resets count if user ruins it. \nRepeat - Whether users can count without someone else.\nWebhook - Whether a webhook will replace the user's message.\nCancel - Cancel this prompt.`)
+        .setDescription(`On - Turn on Counting.\nOff - Turn off counting.\nNew Number - Change the next counting number.\nCurrent Number - Show the next counting number.\nChannel - Change channel in which counting takes place.\nRuin - Resets count if user ruins it. \n(COMING SOON) Repeat - Whether users can count without someone else.\n(COMING SOON) Webhook - Whether a webhook will replace the user's message.\nCancel - Cancel this prompt.`)
         .setColor(embedcolor.color) 
         message.channel.send(`${message.member} Please select one of the following...`,embed)
         const filter = m => m.author.id == message.member.id && [m.content.toLowerCase() == "on" || m.content.toLowerCase()  == "new number" || m.content.toLowerCase()  == "current number" || m.content.toLowerCase()  == "cancel" || m.content.toLowerCase() == "off" || m.content.toLowerCase() == "channel" || m.content.toLowerCase() == "repeat" || m.content.toLowerCase() == "webhook"]
@@ -53,13 +54,8 @@ module.exports = {
               
               }else if(m.content.toLowerCase() == "new number"){
                 collector.stop(`Answered to new number.`)
-                let countingFile = fs.readFileSync("counting.json")
-                let countingObject = JSON.parse(countingFile)
-                  if(!countingObject.hasOwnProperty()){
-                    
-                  }
-                if(countingObject.hasOwnProperty(message.guild.id)){
-                    let guildObject = countingObject[message.guild.id]
+                
+                  
                  
                    
                 message.channel.send(`Please reply with a new number.`)
@@ -84,35 +80,23 @@ module.exports = {
               if(isNaN(newnum)){
                 return message.reply(`This is not a number!`);
               }
-                    countingObject[message.guild.id]
-                    ["currentnumber"] = newnum;
-                    await fs.writeFileSync("counting.json", JSON.stringify(countingObject))
-                    message.channel.send(`The new number is \`${newnum}\``)
+              await countingObject.deleteMany({guild: message.guild.id})
+              let countingObject = new counting({guild: message.guild.id, currnetnumber: String(newnum)})
+              await countingObject.save().then(() => {
+                message.reply(`Done!`)
+              })
             }
             
           })
          
-        }
+              
               }else if(m.content.toLowerCase() == "current number"){
                 collector.stop(`Answered to current number.`)
-                let countingFile = fs.readFileSync("counting.json")
-    let countingObject = JSON.parse(countingFile)
-
-    if(countingObject.hasOwnProperty(message.guild.id)){
-        let guildObject = countingObject[message.guild.id]
-     
-        let curnum = guildObject["currentnumber"]
-        return message.channel.send(`The next number is \`${curnum}\`.`)
-    }else if(!countingObject.hasOwnProperty(message.guild.id)){
-      countingObject[message.guild.id] = {}
-      let guildObject = {}
-      guildObject.currentnumber = "1"
-      guildObject.lastcounter = "791760755195904020"
-      countingObject[message.guild.id] = guildObject
-  
-          await fs.writeFileSync(`counting.json`, JSON.stringify(countingObject))
-          return message.channel.send(`The next number is \`${curnum}\``)
-  }
+                let countingObject = counting.findOne({guild: message.guild.id});
+                if(countingObject.currentnumber == null){
+                  return message.channel.send(`There is no number I can find.`)
+                }
+                message.channel.send(`The next number is ${countingObject.currnetnumber}`)
               }else if(m.content.toLowerCase() == "channel"){
                 collector.stop(`Answered to channel.`)
                 const filter2 = m => m.author.id == message.member.id && [m.mentions.channels.first() || m.content.toLowerCase() == "cancel"]
