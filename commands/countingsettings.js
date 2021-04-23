@@ -80,8 +80,9 @@ module.exports = {
               if(isNaN(newnum)){
                 return message.reply(`This is not a number!`);
               }
-              await counting.deleteMany({guild: message.guild.id})
-              let countingObject = new counting({guild: message.guild.id, currnetnumber: String(newnum)})
+              await counting.deleteMany({guild: message.guild.id});
+              let countingObject = new counting({guild: message.guild.id, currnetnumber: String(newnum), lastuser: "826517160951676958"})
+              console.log(countingObject)
               await countingObject.save().then(() => {
                 message.reply(`Done!`)
               })
