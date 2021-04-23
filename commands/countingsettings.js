@@ -80,7 +80,7 @@ module.exports = {
               if(isNaN(newnum)){
                 return message.reply(`This is not a number!`);
               }
-              await countingObject.deleteMany({guild: message.guild.id})
+              await counting.deleteMany({guild: message.guild.id})
               let countingObject = new counting({guild: message.guild.id, currnetnumber: String(newnum)})
               await countingObject.save().then(() => {
                 message.reply(`Done!`)
