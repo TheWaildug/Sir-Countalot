@@ -98,7 +98,7 @@ module.exports = {
                 if(countingObject.currentnumber == null){
                   return message.channel.send(`There is no number I can find.`)
                 }
-                message.channel.send(`The next number is ${countingObject.currnetnumber}`)
+                message.channel.send(`The next number is **${countingObject.currentnumber}**.`)
               }else if(m.content.toLowerCase() == "channel"){
                 collector.stop(`Answered to channel.`)
                 const filter2 = m => m.author.id == message.member.id && [m.mentions.channels.first() || m.content.toLowerCase() == "cancel"]
