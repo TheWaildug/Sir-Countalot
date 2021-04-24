@@ -93,7 +93,8 @@ module.exports = {
               
               }else if(m.content.toLowerCase() == "current number"){
                 collector.stop(`Answered to current number.`)
-                let countingObject = counting.findOne({guild: message.guild.id});
+                let countingObject = await counting.findOne({guild: message.guild.id});
+                console.log(countingObject)
                 if(countingObject.currentnumber == null){
                   return message.channel.send(`There is no number I can find.`)
                 }
