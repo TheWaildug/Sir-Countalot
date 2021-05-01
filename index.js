@@ -42,6 +42,10 @@ client.on("guildCreate", async guild => {
         })
  
 })
+
+client.on("message", async message => {
+
+})
 client.on("ready", async () => {
     console.log("Sir Countalot is ready!")
 if(client.user.id == "809088738033401866"){
@@ -389,7 +393,7 @@ message.channel.setRateLimitPerUser(sm).then(() => {return message.channel.send(
         
 
         if(!guild || guild.size > 1){
-           return message.channel.send(`This is not a guild!`)
+           return message.channel.send(`Either I am not in this guild or this is not a guild.`)
         }
        
        
@@ -399,17 +403,101 @@ message.channel.setRateLimitPerUser(sm).then(() => {return message.channel.send(
         const isblacklisted = await ServerBlacklist.findOne({guildID: guild.id})
         console.log(isblacklisted)
         if(isblacklisted == null){
-            console.log(`Guild is not blacklisted. Blacklisting...`)
-            let blacklist = new ServerBlacklist({guildID: guild.id})
-            console.log(blacklist)
-            blacklist.save()
+            let reason = message.content.split(" ").splice(2).join(" ")
+           console.log(reason)
             
-            message.channel.send(`I have blacklisted \`${guild.name}\` from using my commands with the id \`${blacklist.id}\`.`)
+              if(!reason){
+                  return message.reply(`I need a reason for this guild.`)
+              }
+            console.log(`Guild is not blacklisted. Blacklisting...`)
+           
+              let newset = new ServerBlacklist({guildID: guild.id, reason: reason, blacklisted: true})
+              await newset.save()
+              console.log(newset)
+            const embed2 = new Discord.MessageEmbed()
+            .setTitle(`You have been blacklisted.`)
+           .setDescription(`Your server, **${guild.name}** has been blacklisted.\n**Reason**\n${reason}\n**ID**\n${newset.id}\n\nIf you think this is a mistake, please appeal by clicking [here.](https://docs.google.com/document/d/1Q1GQRvFH8qGocDFW5XI34xgdo57umU_CfIlfO_0Azwk/edit?usp=sharing)`)  
+           .setTimestamp()
+           const serverowner = await client.users.fetch(guild.ownerID)
+              serverowner.send(embed2).catch(() => {
+                  message.channel.send(`I couldn't DM the server owner.`)
+              })
+            const embed = new Discord.MessageEmbed()
+            .setTitle(`New Server Blacklist`)
+            .setDescription(`**Guild**\n${guild.name} (${guild.id})\n**Moderator**\n${message.member} (${message.member.id})\n**Reason**${reason}\n**ID**\n${newset.id}`)
+            .setTimestamp()
+            const channel = message.guild.channels.cache.get("837868025269059645")
+            channel.send(embed)
+            message.channel.send(`I have blacklisted \`${guild.name}\` from using my commands with the id \`${newset.id}\`.`)
             return;
-        }else if(isblacklisted != null){
+        }else if(isblacklisted.blacklisted == false){
+            let reason = message.content.split(" ").splice(2).join(" ")
+            console.log(reason)
+             
+               if(!reason){
+                   return message.reply(`I need a reason for this guild.`)
+               }
+             console.log(`Guild is not blacklisted. Blacklisting...`)
+             const query = { "guildID": guild.id};
+               const update = {
+                 "$set": {
+                   "reason": reason,
+                   "blacklisted": true
+                 }
+               };
+               const options = { returnNewDocument: true };
+               let newset = await ServerBlacklist.findOneAndUpdate(query, update, options)
+               console.log(newset)
+             const embed2 = new Discord.MessageEmbed()
+             .setTitle(`You have been blacklisted.`)
+            .setDescription(`Your server, **${guild.name}** has been blacklisted.\n**Reason**\n${reason}\n**ID**\n${newset.id}\n\nIf you think this is a mistake, please appeal by clicking [here.](https://docs.google.com/document/d/1Q1GQRvFH8qGocDFW5XI34xgdo57umU_CfIlfO_0Azwk/edit?usp=sharing)`)  
+            .setTimestamp()
+            const serverowner = await client.users.fetch(guild.ownerID)
+               serverowner.send(embed2).catch(() => {
+                   message.channel.send(`I couldn't DM the server owner.`)
+               })
+             const embed = new Discord.MessageEmbed()
+             .setTitle(`New Server Blacklist`)
+             .setDescription(`**Guild**\n${guild.name} (${guild.id})\n**Moderator**\n${message.member} (${message.member.id})\n**Reason**${reason}\n**ID**\n${newset.id}`)
+             .setTimestamp()
+             const channel = message.guild.channels.cache.get("837868025269059645")
+             channel.send(embed)
+             message.channel.send(`I have blacklisted \`${guild.name}\` from using my commands with the id \`${newset.id}\`.`)
+             return;
+        }else if(isblacklisted.blacklisted == true){
+            let reason = message.content.split(" ").splice(2).join(" ")
+           console.log(reason)
+            
+              if(!reason){
+                  return message.reply(`I need a reason for this guild.`)
+              }
             console.log(`Guild is blacklisted. Removing...`)
-            await ServerBlacklist.deleteMany({guildID: guild.id})
-            return message.channel.send(`I have unblacklisted \`${guild.id}\` from using my commands.`)
+            const query = { "guildID": guild.id, "blacklisted": true };
+              const update = {
+                "$set": {
+                  "reason": reason,
+                  "blacklisted": false
+                }
+              };
+              const options = { returnNewDocument: true };
+              let newset = await ServerBlacklist.findOneAndUpdate(query, update, options)
+              console.log(newset)
+              const serverowner = await client.users.fetch(guild.ownerID)
+              const embed2 = new Discord.MessageEmbed()
+            .setTitle(`You have been unblacklisted.`)
+           .setDescription(`Your server, **${guild.name}** has been unblacklisted.\n**Reason**\n${reason}\n**ID**\n${newset.id}`)  
+           .setTimestamp()
+              serverowner.send(embed2).catch(() => {
+                  message.channel.send(`I couldn't DM the server owner.`)
+              })
+            const embed = new Discord.MessageEmbed()
+            .setTitle(`New Server Unblacklist`)
+            .setDescription(`**Guild**\n${guild.name} (${guild.id})\n**Moderator**\n${message.member} (${message.member.id})\n**Reason**${reason}\n**ID**\n${newset.id}`)
+            .setTimestamp()
+            const channel = message.guild.channels.cache.get("837868025269059645")
+            channel.send(embed)
+            
+            return message.channel.send(`I have unblacklisted \`${guild.name}\` from using my commands with the ID \`${newset.id}\``)
         }
     }else if(command == "blacklist"){
         let blacklistman = await DevMongo.findOne({memberID: message.member.id})
@@ -461,8 +549,18 @@ message.channel.setRateLimitPerUser(sm).then(() => {return message.channel.send(
               }
               let blacklist = new CommandBlacklist({memberID: mentionmember.id, reason: reason, blacklisted: true})
               blacklist.save()
-            mentionmember.send(`You have been blacklisted from using my commands with the reason **${reason}** If you think this is a mistake, please appeal via this link: https://discord.gg/qyHnGP5yMP`).catch(error => {
-                console.log(`Cannot DM user.`)
+              const embed = new Discord.MessageEmbed()
+            .setTitle(`You have been blacklisted.`)
+           .setDescription(`You have been blacklisted from using my commands.\n**Reason**\n${reason}\n**ID**\n${blacklist.id}\n\nIf you think this is a mistake, please appeal by clicking [here.](https://docs.google.com/document/d/1Q1GQRvFH8qGocDFW5XI34xgdo57umU_CfIlfO_0Azwk/edit?usp=sharing)`)  
+           .setTimestamp()
+           const embed2 = new Discord.MessageEmbed()
+           .setTitle(`New User Blacklist`)
+           .setDescription(`**User**\n${mentionmember} (${mentionmember.id})\n**Moderator**\n${message.member} (${message.member.id})\n**Reason**${reason}\n**ID**\n${blacklist.id}`)
+           .setTimestamp()
+           const channel = message.guild.channels.cache.get("837868025269059645")
+           channel.send(embed2)
+            mentionmember.send(embed).catch(() => {
+                message.channel.send(`I could not DM this user.`)
             })
             message.channel.send(`I have blacklisted ${mentionmember} from using my commands with the id \`${blacklist.id}\`.`)
             return;
@@ -485,8 +583,18 @@ if(!reason){
               const options = { returnNewDocument: true };
               let newset = await CommandBlacklist.findOneAndUpdate(query, update, options)
               console.log(newset)
-              mentionmember.send(`You have been blacklisted from using my commands with the reason **${reason}** If you think this is a mistake, please appeal via this link: https://discord.gg/qyHnGP5yMP`).catch(error => {
-                console.log(`Cannot DM user.`)
+              const embed = new Discord.MessageEmbed()
+            .setTitle(`You have been blacklisted.`)
+           .setDescription(`You have been blacklisted from using my commands.\n**Reason**\n${reason}\n**ID**\n${newset.id}\n\nIf you think this is a mistake, please appeal by clicking [her.e](https://docs.google.com/document/d/1Q1GQRvFH8qGocDFW5XI34xgdo57umU_CfIlfO_0Azwk/edit?usp=sharing)`)  
+           .setTimestamp()
+           const embed2 = new Discord.MessageEmbed()
+           .setTitle(`New User Blacklist`)
+           .setDescription(`**User**\n${mentionmember} (${mentionmember.id})\n**Moderator**\n${message.member} (${mesasge.member.id})\n**Reason**${reason}\n**ID**\n${newset.id}`)
+           .setTimestamp()
+           const channel = message.guild.channels.cache.get("837868025269059645")
+           channel.send(embed2)
+            mentionmember.send(embed).catch(() => {
+                message.channel.send(`I could not DM this user.`)
             })
             message.channel.send(`I have blacklisted ${mentionmember} from using my commands with the id \`${newset.id}\`.`)
             return;
@@ -506,8 +614,20 @@ if(!reason){
               const options = { returnNewDocument: true };
               let newset = await CommandBlacklist.findOneAndUpdate(query, update, options)
               console.log(newset)
-              mentionmember.send(`You have been unblacklisted from using my commands with the reason **${reason}**`)
-            return message.channel.send(`I have unblacklisted ${mentionmember} from using my commands with the id \`${newset.id}\``)
+              const embed = new Discord.MessageEmbed()
+            .setTitle(`You have been unblacklisted.`)
+           .setDescription(`You have been unblacklisted from using my commands.\n**Reason**\n${reason}\n**ID**\n${newset.id}`)  
+           .setTimestamp()
+           const embed2 = new Discord.MessageEmbed()
+           .setTitle(`New User Unblacklist`)
+           .setDescription(`**User**\n${mentionmember} (${mentionmember.id})\n**Moderator**\n${message.member} (${message.member.id})\n**Reason**\n${reason}\n**ID**\n${newset.id}`)
+           .setTimestamp()
+           const channel = message.guild.channels.cache.get("837868025269059645")
+           channel.send(embed2)
+           mentionmember.send(embed).catch(() => {
+            message.channel.send(`I could not DM this user.`)
+        })   
+        return message.channel.send(`I have unblacklisted ${mentionmember} from using my commands with the id \`${newset.id}\``)
         }
     }else if(command == "botinfo"){
         client.Commands.get("botinfo").execute(message,args,client)
@@ -556,6 +676,8 @@ if(!reason){
         }
     }) 
         collector.on("collect",async  m => {
+            console.log(`collected ${m.content}`)
+            collector.stop()
             if(m.content.toLowerCase() == "0"){
                 rank = "None"
                

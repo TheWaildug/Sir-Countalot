@@ -2,6 +2,19 @@ const Discord = require("discord.js")
 const EmbedColor = require("../embedmongo")
 const ms = require("ms")
 const jsonfile = require("../package.json")
+async function getUsers(client) {
+  let guilds = await client.guilds.cache.array();
+let membersize = 0
+  for (let i = 0; i < guilds.length; i++) {
+   await client.guilds.cache.get(guilds[i].id).members.fetch().then(r => {
+      r.array().forEach(r => {
+        membersize++
+      });
+    });
+  }
+  return membersize
+}
+
 module.exports = {
     name: "botinfo",
     description: "Shows information about Sir Countalot",
@@ -32,10 +45,13 @@ module.exports = {
       platform = "Windows (Running on Visual Studio Code)"
     }
     const emoji = client.emojis.cache.get("810267394999058432")
-    const owner = await client.users.fetch("432345618028036097")
+    const allguilds = client.guilds.cache.size
+    const allusers = await getUsers(client)
+    console.log(allusers)
+    const cacheusers = client.users.cache.size;
     const embed = new Discord.MessageEmbed()
     .setAuthor(`Information about ${client.user.username}.`,client.user.displayAvatarURL())
-    .setDescription(`**Bot** - ${client.user.tag} - ${client.user.id}\n**Created with** ${emoji}\n**Operating System** -  ${platform}\n **Sir Countalot Version** - ${jsonfile.version}\n**Node JS Version** - ${process.version}\n**Time since last start** - ${ms(client.uptime,{long: true})}`)
+    .setDescription(`**Bot** - ${client.user.tag} - ${client.user.id}\n**Created with** ${emoji}\n**Operating System** -  ${platform}\n**Guilds** - ${allguilds}\n**Users** -  ${allusers} (${cacheusers} cached.)\n**Sir Countalot Version** - ${jsonfile.version}\n**Node JS Version** - ${process.version}\n**Time since last start** - ${ms(client.uptime,{long: true})}`)
 .setColor(embedcolor.color)
 message.channel.send(embed)
 return;

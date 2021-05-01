@@ -14,7 +14,8 @@ module.exports = {
             console.log(`Guild ${message.guild.id} Error ${error}`)
           })
         }
-        let yourping = Date.now() - message.createdTimestamp
+        let yourping = new Date().getTime() - message.createdTimestamp 
+
         let botping = Math.round(client.ws.ping)
         let embedcolor = await EmbedColor.findOne({guildID: message.guild.id})
       
