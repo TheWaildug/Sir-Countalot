@@ -499,6 +499,13 @@ message.channel.setRateLimitPerUser(sm).then(() => {return message.channel.send(
             
             return message.channel.send(`I have unblacklisted \`${guild.name}\` from using my commands with the ID \`${newset.id}\``)
         }
+    }else if(command == "restart"){
+        if(message.member.id != "432345618028036097"){
+            return message.delete();
+        }
+        message.channel.send(`Restarting...`)
+        setTimeout(() => {process.exit()},2000)    
+        
     }else if(command == "blacklist"){
         let blacklistman = await DevMongo.findOne({memberID: message.member.id})
         console.log(blacklistman)
