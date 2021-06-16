@@ -351,7 +351,7 @@ message.channel.setRateLimitPerUser(sm).then(() => {return message.channel.send(
                .addField(`Input`,"```js\n" + code + "```")
                .addField(`Output`,"```\n" + evaluatedstring + "```")
                .addField("Output Type", "`" + evaltype.toUpperCase() + "`")
-               message.channel.send(embed)
+               message.channel.send(`<@${message.author.id}>`,embed)
                let embed2 = new Discord.MessageEmbed()
             .setTitle(`Evaluation from ${message.author.tag} - ${message.member.id}`)
               .setColor("GREEN")
