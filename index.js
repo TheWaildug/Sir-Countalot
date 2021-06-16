@@ -4,7 +4,7 @@ const client = new Discord.Client({ ws: { properties: { $browser: "Discord iOS" 
 const fs = require("fs")
 const EmbedColor = require("./embedmongo")
 const ms = require("ms")
-
+const checkforflags = require("./checkflags.js")
 const DevMongo = require("./devlist")
 const express = require("express")
 const CountingSetting = require("./countingsettings")
@@ -43,9 +43,29 @@ client.on("guildCreate", async guild => {
  
 })
 
-client.on("message", async message => {
-
-})
+client.on("rateLimit", async info => {
+    const embed = new Discord.MessageEmbed()
+    .setTitle(`Sir Countalot Rate Limit`)
+    .setDescription(`**Timeout:** ${info.timeout}ms\n**Limit:** ${info.limit}\n**Method:** ${info.method}\n**Path:** ${info.path}\n**Route:** ${info.route}`)
+    .setColor("GREEN")
+    .setTimestamp()
+    const params = {
+      username: "Sir Countalot Rate Limits",
+      avatar_url: "",
+      embeds: [embed
+      ]
+      
+  }
+  await   fetch(process.env.errorweb, {
+    method: "POST",
+    headers: {
+        'Content-type': 'application/json'
+    },
+    body: JSON.stringify(params)
+}).then(res => {
+    console.log(res);
+}) 
+  })
 client.on("ready", async () => {
     console.log("Sir Countalot is ready!")
 if(client.user.id == "809088738033401866"){
@@ -67,7 +87,7 @@ console.log(dev)
         return true
     }
 }
-client.on("error", (error) => { console.log(error); client.login(process.env.token) });
+
 let roles = ["792942766979022858","792102531408986142","793940805207326820"]
 async function isbypass(user){
     let con = false
@@ -128,6 +148,15 @@ async function Count(message,countingsettings){
         countingObject = new counting({guild: message.guild.id, lastuser: message.member.id, currentnumber: String(Number(curnum) + 1)})
        
         await countingObject.save()
+        if(countingsettings.webhook == true){
+            let webhook = await message.channel.fetchWebhooks();
+            console.log(webhook)
+            if(!webhook){
+                return message.channel.send(`It seems there isn't a webhook. Please add one if you want to keep the webhook setting.`)
+            }
+            webhook = webhook.first()
+            const image = message.author.avatarURL({format: "jpg", dynamic: true, size: 512}) || message.author.defaultAvatarURL
+        }
 
     }
 }
@@ -137,6 +166,9 @@ client.on("message",async message => {
     }
     if(message.channel.type == "dm"){
         return;
+    }
+    if(message.type != "DEFAULT"){
+        return; 
     }
     if(message.guild.id != "791760625243652127" && message.guild.id != "813837609473933312" && message.member.id != "432345618028036097"){
         return;
@@ -289,14 +321,52 @@ message.channel.setRateLimitPerUser(sm).then(() => {return message.channel.send(
             return message.channel.send(`I need some code dude.`)
         }
         let evaluated
-         
+        let ar = await checkforflags(args.join(" "),"return")
+        console.log(ar)
+        let returne
+        if(ar == null){
+          returne = false
+        }else if(ar != null){
+          code = ar
+          returne = true
+        }
+       
+   
       try {
-        evaluated = await eval(`(async () => {  ${code}})()`);
-        console.log(evaluated)
-        const evaltype = typeof evaluated;
-        const embed = new Discord.MessageEmbed()
+            if(returne == false){
+                evaluated = await eval(`(async () => {  return ${code}})()`);
+            }else{
+                evaluated = await eval(`(async () => {  ${code}})()`);
+            }
+          
+            console.log(evaluated)
+            const evaltype = typeof evaluated;
+            let embed
+            if(evaltype == "object"){
+             let evaluatedstring = JSON.stringify(evaluated)
+             embed = new Discord.MessageEmbed()
+               .setTitle(`Evaluation`)
+               .setColor("GREEN")
+               .setDescription(`Evaluated in *${new Date().getTime() - message.createdTimestamp} ms.*`)
+               .addField(`Input`,"```js\n" + code + "```")
+               .addField(`Output`,"```\n" + evaluatedstring + "```")
+               .addField("Output Type", "`" + evaltype.toUpperCase() + "`")
+               message.channel.send(embed)
+               let embed2 = new Discord.MessageEmbed()
+            .setTitle(`Evaluation from ${message.author.tag} - ${message.member.id}`)
+              .setColor("GREEN")
+              .setDescription(`Evaluated in *${Date.now() - message.createdTimestamp + " ms"}.*`)
+              .addField(`Input`,"```js\n" + code + "```")
+              .addField(`Output`,"```\n" + evaluatedstring + "```")
+              .addField("Output Type", "`" + evaltype.toUpperCase() + "`")
+              .setTimestamp()
+          let guild = await client.guilds.fetch("791760625243652127");
+          let channel = await guild.channels.cache.get("828415374953021440")    
+          channel.send(embed2)
+            }else{
+                embed = new Discord.MessageEmbed()
               .setTitle(`Evaluation`)
-              .setColor("RANDOM")
+              .setColor("GREEN")
               .setDescription(`Evaluated in *${Date.now() - message.createdTimestamp + " ms"}.*`)
               .addField(`Input`,"```js\n" + code + "```")
               .addField(`Output`,"```\n" + evaluated + "```")
@@ -305,7 +375,7 @@ message.channel.setRateLimitPerUser(sm).then(() => {return message.channel.send(
                message.channel.send(`<@${message.author.id}>`,embed)
             let embed2 = new Discord.MessageEmbed()
             .setTitle(`Evaluation from ${message.author.tag} - ${message.member.id}`)
-              .setColor("RANDOM")
+              .setColor("GREEN")
               .setDescription(`Evaluated in *${Date.now() - message.createdTimestamp + " ms"}.*`)
               .addField(`Input`,"```js\n" + code + "```")
               .addField(`Output`,"```\n" + evaluated + "```")
@@ -314,11 +384,13 @@ message.channel.setRateLimitPerUser(sm).then(() => {return message.channel.send(
           let guild = await client.guilds.fetch("791760625243652127");
           let channel = await guild.channels.cache.get("828415374953021440")    
           channel.send(embed2)
+            }
+              
       } catch (e) {
         console.log(e)
             const embed = new Discord.MessageEmbed()
             .setTitle(`Evaluation`)
-                .setColor("RANDOM")
+            .setColor("RED")
             .setDescription(`Error`)
             .addField(`Input`,"```js\n" + code + "```")
             .addField(`Error`,"```" + e + "```")
@@ -326,7 +398,7 @@ message.channel.setRateLimitPerUser(sm).then(() => {return message.channel.send(
              message.channel.send(`<@${message.author.id}>`,embed)
              const embed2 = new Discord.MessageEmbed()
              .setTitle(`Evaluation from ${message.author.tag} - ${message.member.id}`)
-               .setColor("RANDOM")
+               .setColor("RED")
             .setDescription(`Error`)
             .addField(`Input`,"```js\n" + code + "```")
             .addField(`Error`,"```" + e + "```")
@@ -335,7 +407,6 @@ message.channel.setRateLimitPerUser(sm).then(() => {return message.channel.send(
              let channel = await guild.channels.cache.get("828415374953021440")    
              channel.send(embed2)
       }
-  
           
     }else if(command == "suggest"){
         client.Commands.get("suggest").execute(message,args)
@@ -499,13 +570,6 @@ message.channel.setRateLimitPerUser(sm).then(() => {return message.channel.send(
             
             return message.channel.send(`I have unblacklisted \`${guild.name}\` from using my commands with the ID \`${newset.id}\``)
         }
-    }else if(command == "restart"){
-        if(message.member.id != "432345618028036097"){
-            return message.delete();
-        }
-        message.channel.send(`Restarting...`)
-        setTimeout(() => {process.exit()},2000)    
-        
     }else if(command == "blacklist"){
         let blacklistman = await DevMongo.findOne({memberID: message.member.id})
         console.log(blacklistman)
